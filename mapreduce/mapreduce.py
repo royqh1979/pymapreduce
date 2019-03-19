@@ -51,33 +51,49 @@ class MapReducer(object):
         return self.mapper(item)
 
     def process(self, items, manager):
-        itemlist = items
-        if self.prefiltering is not None:
-            itemlist = filter(self.prefiltering, itemlist)
-        itemlist = map(self.mapper, itemlist)
-        if self.postfiltering is not None:
-            itemlist = filter(self.postfiltering, itemlist)
-        if self.reducer is not None:
-            ''' chain will resolve the issue of non-uniform return values '''
-            manager.append(reduce(self.reducer, itemlist, self.initializer))
+        result = self.initializer
+        if self.prefiltering is not None and self.postfiltering is not None:
+            for item in items:
+                if not self.prefiltering(item):
+                    continue
+                new_item = self.mapper(item)
+                if not self.postfiltering(item):
+                    continue
+                result = self.reducer(result, new_item)
+        elif self.prefiltering is None and self.postfiltering is not None:
+            for item in items:
+                new_item = self.mapper(item)
+                if not self.postfiltering(item):
+                    continue
+                result = self.reducer(result, new_item)
+        elif self.prefiltering is not None and self.postfiltering is None:
+            for item in items:
+                if not self.prefiltering(item):
+                    continue
+                new_item = self.mapper(item)
+                result = self.reducer(result, new_item)
         else:
-            manager.extend(list(itemlist))
+            for item in items:
+                new_item = self.mapper(item)
+                result = self.reducer(result, new_item)
+        manager.append(result)
+
+
+
 
     def run(self):
+        if self.reducer is None:
+            return mp.Pool().map(self.mapper, self.iterable)
         m = mp.Manager()
         ''' manager object to store the result from all processes '''
         self.MR_Manager = m.list()
         processes = []
-        step = None
-        if isinstance(self.iterable, collections.abc.Sequence):
-            l = len(self.iterable)
-            step = int(ceil(l / self.real_workers))
         ''' setup processes '''
         for worker_id in range(self.real_workers):
             ''' if the length of the iterable is known slice the iterable and assign to each worker '''
-            if l is not None:
+            if self.worker_assign is None:
                 P = mp.Process(target=self.process,
-                               args=(itertools.islice(self.iterable, worker_id * step, (worker_id + 1) * step), self.MR_Manager))
+                               args=(itertools.islice(self.iterable, worker_id,None,self.real_workers), self.MR_Manager))
             else:
                 ''' 
                 create a partial since we need to pass the worker count and 
@@ -89,10 +105,8 @@ class MapReducer(object):
                                args=(filter(assignment, self.iterable, ), self.MR_Manager))
             processes.append(P)
         ''' start & run '''
-        start = time()
         [p.start() for p in processes]
         [p.join() for p in processes]
-        print(timer(start))
         ''' final reduce phase '''
         itemlist = itertools.chain(self.MR_Manager)
         if self.merger is not None:
@@ -108,79 +122,4 @@ class MapReducer(object):
                 return reduce(self.reducer, itemlist)
 
 
-''' Helper Functions for the examples '''
 
-
-def mapper_1(item):
-    return -item
-
-
-def mapper_2(item):
-    return (item +5)*23 - 1
-
-
-def reducer_2(accumulated, item):
-    return accumulated + item
-
-
-def filter_1(item):
-    return item % 2 == 0
-
-
-def timer(start):
-    print('  Time       : %8.6fsec' % (time() - start))
-
-def worker_assign(workers, current_worker_id, item):
-    item % workers == current_worker_id
-
-def is_prime(n):
-    for i in range(2,ceil(sqrt(n))):
-        if n%i == 0:
-            return False
-    return True
-
-if __name__ == "__main__":
-    workers = 4
-    N = 10000000
-    ''' Example '''
-    start = time()
-    mr = MapReducer(list(range(N)), workers=workers, mapper=mapper_1)
-    print('* map ')
-    # print('  List:', list(mr.run()))
-    ''' approximate running time '''
-    timer(mr.started)
-    mr = MapReducer(list(range(N)), workers=workers, prefiltering=is_prime,mapper=mapper_2, reducer=reducer_2, initializer=0)
-    print('* map & reduce ')
-    print('  MR Result  :', mr.run())
-    timer(mr.started)
-    print('  Validation :', sum([(n +5)*23 - 1 for n in range(N)]))
-    lst=list(range(N))
-    start = time()
-    n=sum([(n +5)*23 - 1 for n in range(N) if is_prime(n)])
-    timer(start)
-    print(n)
-    start = time()
-    n=0
-    for i in range(N):
-        if is_prime(i):
-            n+=(i +5)*23 - 1
-    timer(start)
-    print(n)
-    mr = MapReducer(list(range(N)), workers=workers, mapper=mapper_2, reducer=reducer_2, prefiltering=filter_1, initializer=0)
-    print('* pre-filtering, map, reduce ')
-    print('  MR Result  :', mr.run())
-    timer(mr.started)
-    print('  Validation :', sum([(n +5)*23 - 1 for n in range(N) if n % 2 == 0]))
-    mr = MapReducer(
-        range(N),
-        workers=workers,
-        mapper=mapper_2,
-        reducer=reducer_2,
-        initializer=0,
-        prefiltering=filter_1,
-        worker_assign=worker_assign
-    )
-    print('* pre-filtering, map, reduce with generator input ')
-    print('  MR Result  :', mr.run())
-    timer(mr.started)
-    print('  Validation :', sum([(n +5)*23 - 1 for n in range(N) if n % 2 == 0]))
