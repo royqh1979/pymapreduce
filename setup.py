@@ -18,7 +18,7 @@ test_requirements = [
 
 setup(
     name='mapreduce-py',
-    version='0.5.0-1',
+    version='0.5.1',
     description='"A simple multi-processing based MapReduce framework"',
     long_description=readme + '\n\n' + history,
     author='Roy Qu',
