@@ -1,4 +1,5 @@
 from mapreduce import *
+from time import time
 
 
 def mapper_1(item):

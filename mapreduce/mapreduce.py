@@ -4,11 +4,9 @@ Originally taken from https://gist.github.com/georgepsarakis/7512023
 
 
 """
-import collections
 import itertools
 import multiprocessing as mp
-from functools import partial, reduce
-from time import time
+from functools import partial
 from typing import Iterable, Callable
 
 

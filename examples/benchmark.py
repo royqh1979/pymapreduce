@@ -1,5 +1,7 @@
 from mapreduce import *
 from math import ceil,sqrt
+from time import time
+from functools import reduce
 
 def mapper_2(item):
     return (item +5)*23 - 1
