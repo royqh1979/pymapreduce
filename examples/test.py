@@ -23,44 +23,40 @@ def timer(start):
 def worker_assign(workers, current_worker_id, item):
     return item % workers == current_worker_id
 
-def is_prime(n):
-    for i in range(2,ceil(sqrt(n))):
-        if n%i == 0:
-            return False
-    return True
-
 if __name__ == "__main__":
     workers = 4
     N = 150000
     ''' Example '''
-    start = time()
-    mr = MapReducer(range(N), workers=workers, mapper=mapper_1)
     print('* map ')
-    print('  List:', len(list(mr.run())))
+    mr = MapReducer().workers(workers).mapper(mapper_1)
+    start = time()
+    result = mr(range(N))
+    print('  List:', len(list(result)))
     ''' approximate running time '''
-    timer(mr.started)
-    mr = MapReducer(range(N), workers=workers, mapper=mapper_2, reducer=reducer_2, initializer=0)
+    timer(start)
+
     print('* map & reduce ')
-    print('  MR Result  :', mr.run())
-    timer(mr.started)
+    mr = MapReducer().workers(workers).mapper(mapper_2).reducer(reducer_2,0)
+    start = time()
+    result=mr(range(N))
+    print('  MR Result  :', result)
+    timer(start)
     n=sum([(n +5)*23 - 1 for n in range(N)])
     print('  Validation:',n)
 
-    mr = MapReducer(range(N), workers=workers, mapper=mapper_2, reducer=reducer_2, prefiltering=filter_1, initializer=0)
     print('* pre-filtering, map, reduce ')
-    print('  MR Result  :', mr.run())
-    timer(mr.started)
+    mr = MapReducer().workers(workers).mapper(mapper_2).reducer(reducer_2,0).prefilter(filter_1)
+    start = time()
+    result = mr(range(N))
+    print('  MR Result  :', result)
+    timer(start)
     print('  Validation :', sum([(n +5)*23 - 1 for n in range(N) if n % 2 == 0]))
-    mr = MapReducer(
-        range(N),
-        workers=workers,
-        mapper=mapper_2,
-        reducer=reducer_2,
-        initializer=0,
-        prefiltering=filter_1,
-        worker_assign=worker_assign
-    )
+
     print('* pre-filtering, map, reduce with generator input ')
-    print('  MR Result  :', mr.run())
-    timer(mr.started)
+    mr = MapReducer().workers(workers).mapper(mapper_2).reducer(reducer_2,0)\
+        .prefilter(filter_1).worker_assigner(worker_assign)
+    start = time()
+    result = mr(range(N))
+    print('  MR Result  :', result)
+    timer(start)
     print('  Validation :', sum([(n +5)*23 - 1 for n in range(N) if n % 2 == 0]))

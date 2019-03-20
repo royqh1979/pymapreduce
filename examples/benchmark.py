@@ -1,5 +1,5 @@
 from mapreduce import *
-
+from math import ceil,sqrt
 
 def mapper_2(item):
     return (item +5)*23 - 1
@@ -22,19 +22,23 @@ def is_prime(n):
     return True
 
 if __name__ == "__main__":
-    workers = 1
-    N = 1500000
+    workers = 0
+    N = 800000
 
-    mr = MapReducer(range(N), workers=workers, prefiltering=is_prime, mapper=mapper_2, reducer=reducer_2, initializer=0)
+    start = time()
+    mr = MapReducer().workers(workers).prefilter(is_prime).mapper(mapper_2).reducer(reducer_2,0)
+    result = mr(range(N))
     print('* map & reduce ')
-    print('  MR Result  :', mr.run())
-    timer(mr.started)
+    print('  MR Result  :', result)
+    timer(start)
 
-    mr = MapReducer(range(N), workers=workers, prefiltering=is_prime, mapper=mapper_2, reducer=reducer_2, initializer=0,
-                    worker_assign = worker_assign)
+    start = time()
+    mr = MapReducer().workers(workers).\
+            prefilter(is_prime).mapper(mapper_2).reducer(reducer_2, 0).worker_assigner(worker_assign)
+    result = mr(range(N))
     print('* map & reduce with work assign function ')
-    print('  MR Result  :', mr.run())
-    timer(mr.started)
+    print('  MR Result  :', result)
+    timer(start)
 
     lst=list(range(N))
     start = time()
