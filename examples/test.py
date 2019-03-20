@@ -24,11 +24,10 @@ def worker_assign(workers, current_worker_id, item):
     return item % workers == current_worker_id
 
 if __name__ == "__main__":
-    workers = 4
     N = 150000
     ''' Example '''
     print('* map ')
-    mr = MapReducer().workers(workers).mapper(mapper_1)
+    mr = MapReducer().mapper(mapper_1)
     start = time()
     result = mr(range(N))
     print('  List:', len(list(result)))
@@ -36,7 +35,7 @@ if __name__ == "__main__":
     timer(start)
 
     print('* map & reduce ')
-    mr = MapReducer().workers(workers).mapper(mapper_2).reducer(reducer_2,0)
+    mr = MapReducer().mapper(mapper_2).reducer(reducer_2,0)
     start = time()
     result=mr(range(N))
     print('  MR Result  :', result)
@@ -45,7 +44,7 @@ if __name__ == "__main__":
     print('  Validation:',n)
 
     print('* pre-filtering, map, reduce ')
-    mr = MapReducer().workers(workers).mapper(mapper_2).reducer(reducer_2,0).prefilter(filter_1)
+    mr = MapReducer().mapper(mapper_2).reducer(reducer_2,0).prefilter(filter_1)
     start = time()
     result = mr(range(N))
     print('  MR Result  :', result)
@@ -53,7 +52,7 @@ if __name__ == "__main__":
     print('  Validation :', sum([(n +5)*23 - 1 for n in range(N) if n % 2 == 0]))
 
     print('* pre-filtering, map, reduce with generator input ')
-    mr = MapReducer().workers(workers).mapper(mapper_2).reducer(reducer_2,0)\
+    mr = MapReducer().mapper(mapper_2).reducer(reducer_2,0)\
         .prefilter(filter_1).worker_assigner(worker_assign)
     start = time()
     result = mr(range(N))

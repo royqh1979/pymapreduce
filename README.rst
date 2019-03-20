@@ -24,10 +24,9 @@ Sample program
         return True
 
     if __name__ == "__main__":
-        workers = 1
         N = 150000
         print('* map & reduce ')
-        mr = MapReducer().workers(workers).mapper(mapper_2).reducer(reducer_2,0)
+        mr = MapReducer().mapper(mapper_2).reducer(reducer_2,0)
         result=mr(range(N))
         print('  MR Result  :', result)
         n=sum([(n +5)*23 - 1 for n in range(N)])

@@ -18,7 +18,7 @@ test_requirements = [
 
 setup(
     name='mapreduce-py',
-    version='0.1.0',
+    version='0.5.0-1',
     description='"A simple multi-processing based MapReduce framework"',
     long_description=readme + '\n\n' + history,
     author='Roy Qu',
@@ -35,7 +35,7 @@ setup(
     zip_safe=False,
     keywords=['MapReduce', "functional"],
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: BSD License',
         'Topic :: Software Development :: Libraries',
         'Topic :: Utilities',
