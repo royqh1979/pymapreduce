@@ -18,7 +18,7 @@ def worker_assign(workers, current_worker_id, item):
     return item % workers == current_worker_id
 
 def is_prime(n):
-    for i in range(2,ceil(sqrt(n))):
+    for i in range(2,ceil(sqrt(n))+1):
         if n%i == 0:
             return False
     return True
